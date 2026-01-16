@@ -1,0 +1,346 @@
+<!doctype html>
+<html lang="ru">
+<head>
+  <meta charset="utf-8" />
+  <meta name="viewport" content="width=device-width,initial-scale=1" />
+  <title>ПУСТА — Донат просто так</title>
+  <meta name="description" content="ПУСТА — минималистичный сайт для доната 'просто так'. Никаких обещаний, товаров или услуг." />
+  <!-- Open Graph (полезно при шаринге) -->
+  <meta property="og:title" content="ПУСТА — Донат просто так">
+  <meta property="og:description" content="Иногда хочется отдать что-то просто так. Этот сайт — место для этого.">
+  <meta property="og:type" content="website">
+  <meta name="theme-color" content="#060606">
+  <style>
+    /* ==========================
+       Тема и переменные
+       ========================== */
+    :root{
+      --bg:#060606;
+      --panel: rgba(255,255,255,0.02);
+      --text:#e9e9e9;
+      --muted:#bdbdbd;
+      --accent1: #ffffff;
+      --accent2: #d0d0ff;
+      --glass: rgba(255,255,255,0.03);
+      --maxw: 980px;
+      --radius: 16px;
+      --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    }
+
+    /* ==========================
+       Сброс
+       ========================== */
+    *{box-sizing:border-box}
+    html,body{height:100%}
+    body{
+      margin:0;
+      background: radial-gradient(1200px 600px at 10% 10%, rgba(120,120,160,0.04), transparent 6%),
+                  radial-gradient(800px 350px at 90% 90%, rgba(80,80,120,0.03), transparent 6%),
+                  var(--bg);
+      color:var(--text);
+      font-family:var(--font);
+      -webkit-font-smoothing:antialiased;
+      -moz-osx-font-smoothing:grayscale;
+      display:flex;
+      align-items:center;
+      justify-content:center;
+      padding:48px 20px;
+      overflow-x:hidden;
+    }
+
+    /* тонкий шум/зерно */
+    body::before{
+      content:"";
+      position:fixed;
+      inset:0;
+      pointer-events:none;
+      background-image:
+        radial-gradient(circle, rgba(255,255,255,0.02) 1px, rgba(0,0,0,0) 1px);
+      background-size:3px 3px;
+      mix-blend-mode:overlay;
+      opacity:0.28;
+      z-index:0;
+    }
+
+    /* контейнер */
+    .wrap{
+      width:100%;
+      max-width:var(--maxw);
+      padding:56px;
+      position:relative;
+      z-index:2;
+    }
+
+    .card{
+      border-radius:var(--radius);
+      padding:56px 48px;
+      background:
+        linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+      backdrop-filter: blur(6px) saturate(1.05);
+      box-shadow:
+        0 12px 50px rgba(0,0,0,0.6),
+        0 1px 0 rgba(255,255,255,0.02) inset;
+      display:flex;
+      flex-direction:column;
+      align-items:center;
+      text-align:center;
+      gap:22px;
+      position:relative;
+      overflow:visible;
+    }
+
+    /* декоративный мягкий ореол за заголовком */
+    .glow {
+      position:absolute;
+      inset:auto;
+      left:50%;
+      top:18%;
+      transform:translateX(-50%);
+      width:720px;
+      height:360px;
+      pointer-events:none;
+      filter: blur(48px) saturate(1.2);
+      opacity:0.13;
+      background: radial-gradient(closest-side, rgba(200,200,255,0.14), rgba(120,120,180,0.04) 40%, transparent 60%);
+      border-radius:50%;
+      z-index:0;
+    }
+
+    h1{
+      margin:0;
+      font-size:clamp(48px,9.8vw,96px);
+      letter-spacing:0.02em;
+      line-height:0.95;
+      font-weight:800;
+      color:var(--text);
+      text-transform:uppercase;
+      z-index:1;
+      position:relative;
+      mix-blend-mode:screen;
+    }
+
+    .lead{
+      color:var(--muted);
+      font-size:clamp(15px,2.6vw,18px);
+      max-width:70ch;
+      z-index:1;
+    }
+
+    .text-block{
+      color:var(--muted);
+      font-size:15px;
+      line-height:1.6;
+      max-width:64ch;
+      z-index:1;
+    }
+    .text-block p{margin:0 0 10px}
+
+    /* кнопка */
+    .donate {
+      --pv:15px;
+      --ph:44px;
+      display:inline-flex;
+      align-items:center;
+      gap:12px;
+      padding:var(--pv) var(--ph);
+      border-radius:999px;
+      background: linear-gradient(180deg, rgba(255,255,255,0.98), rgba(245,245,255,0.92));
+      color:#000;
+      text-decoration:none;
+      font-weight:800;
+      font-size:18px;
+      box-shadow:
+        0 20px 60px rgba(0,0,0,0.55),
+        0 2px 0 rgba(255,255,255,0.02) inset;
+      transition: transform 280ms cubic-bezier(.2,.9,.3,1), box-shadow 280ms, filter 280ms;
+      z-index:1;
+    }
+    .donate:hover{ transform: translateY(-6px) scale(1.03); filter:brightness(1.02);
+      box-shadow: 0 30px 90px rgba(0,0,0,0.6), 0 0 40px rgba(200,200,255,0.06); }
+    .donate:active{ transform: translateY(-2px) scale(0.995) }
+
+    /* вторичная кнопка: копировать ссылку / шаринг */
+    .actions {
+      display:flex;
+      gap:12px;
+      align-items:center;
+      justify-content:center;
+      margin-top:6px;
+      z-index:1;
+    }
+    .btn-ghost{
+      background:transparent;
+      color:var(--muted);
+      border:1px solid rgba(255,255,255,0.04);
+      padding:10px 14px;
+      border-radius:10px;
+      font-weight:600;
+      font-size:13px;
+      cursor:pointer;
+      transition: transform 200ms, background 200ms;
+    }
+    .btn-ghost:hover{ transform:translateY(-3px); background: rgba(255,255,255,0.02); color:var(--accent2) }
+
+    .donate-sub{ color:var(--muted); font-size:13px; margin-top:6px; z-index:1 }
+
+    footer.note{
+      color:rgba(230,230,230,0.6);
+      font-size:12px;
+      margin-top:10px;
+      z-index:1;
+    }
+
+    /* плавное появление */
+    .reveal{ opacity:0; transform:translateY(12px); transition: opacity 900ms ease, transform 900ms cubic-bezier(.2,.8,.2,1) }
+    .reveal.visible{ opacity:1; transform:none }
+
+    /* небольшие плавающие точки (particle) */
+    .particles{ position:absolute; inset:0; pointer-events:none; z-index:0; overflow:visible }
+    .particle{
+      position:absolute;
+      width:8px;height:8px;border-radius:999px;
+      background:linear-gradient(180deg, rgba(255,255,255,0.65), rgba(200,200,255,0.35));
+      opacity:0.06;
+      filter: blur(0.6px);
+      animation: float 8s ease-in-out infinite;
+    }
+    @keyframes float{
+      0%{ transform:translateY(0) }
+      50%{ transform:translateY(-18px) }
+      100%{ transform:translateY(0) }
+    }
+
+    /* адаптив */
+    @media (max-width:640px){
+      .card{ padding:36px 20px; border-radius:12px }
+      .glow{ display:none }
+    }
+  </style>
+</head>
+<body>
+  <div class="wrap">
+    <main class="card" role="main" aria-labelledby="title">
+      <!-- декоративный ореол -->
+      <div class="glow" aria-hidden="true"></div>
+
+      <!-- плавные частицы -->
+      <div class="particles" aria-hidden="true" id="particles"></div>
+
+      <h1 id="title" class="reveal">ПУСТА</h1>
+      <div class="lead reveal" style="transition-delay:120ms">Здесь ничего нет. И именно поэтому ты можешь поддержать.</div>
+
+      <section class="text-block reveal" style="transition-delay:240ms">
+        <p>Это не проект.</p>
+        <p>Это не просьба.</p>
+        <p>Это не продукт.</p>
+        <p>Если ты здесь — значит, ты уже понял.</p>
+        <p><strong>Донат — просто так.</strong><br>Без причин. Без обязательств.</p>
+      </section>
+
+      <div class="donate-wrap reveal" style="transition-delay:360ms">
+        <!-- Основная кнопка. Ссылка задаётся в JS через переменную defaultDonationUrl -->
+        <a id="donateBtn" class="donate" href="#" target="_blank" rel="noopener noreferrer" aria-label="Поддержать ПУСТУ">Поддержать ПУСТУ</a>
+
+        <div class="actions">
+          <button id="copyBtn" class="btn-ghost" title="Скопировать ссылку">Копировать ссылку</button>
+          <button id="shareTw" class="btn-ghost" title="Поделиться в X">Поделиться X</button>
+          <button id="shareTG" class="btn-ghost" title="Поделиться в Telegram">Telegram</button>
+        </div>
+
+        <div class="donate-sub">Ничего не требуется. Просто действие — если хочешь.</div>
+      </div>
+
+      <footer class="note reveal" style="transition-delay:520ms">
+        Это добровольная поддержка. Никаких услуг, товаров или обещаний.
+      </footer>
+    </main>
+  </div>
+
+  <script>
+    /* ==========================
+       Конфигурация — поменяй ссылку на донат здесь
+       ========================== */
+    const defaultDonationUrl = "https://www.donationalerts.com/r/pustotapust"; // <-- ваша ссылка
+
+    // ==========================
+    // Установка ссылки кнопки
+    // ==========================
+    const donateBtn = document.getElementById('donateBtn');
+    donateBtn.href = defaultDonationUrl;
+
+    // ==========================
+    // Плавное появление (stagger)
+    // ==========================
+    document.addEventListener('DOMContentLoaded', () => {
+      document.querySelectorAll('.reveal').forEach((el, i) => {
+        setTimeout(()=> el.classList.add('visible'), 120 * i + 80);
+      });
+
+      // создаём 12 частиц с рандомным размещением
+      const pWrap = document.getElementById('particles');
+      for(let i=0;i<12;i++){
+        const el = document.createElement('div');
+        el.className = 'particle';
+        const left = Math.random()*100;
+        const top = Math.random()*80;
+        const scale = 0.6 + Math.random()*1.6;
+        el.style.left = left + '%';
+        el.style.top = top + '%';
+        el.style.width = (6*scale)+'px';
+        el.style.height = (6*scale)+'px';
+        el.style.opacity = (0.03 + Math.random()*0.08).toString();
+        el.style.animationDelay = (Math.random()*6)+'s';
+        el.style.transform = `translate3d(0,0,0)`;
+        pWrap.appendChild(el);
+      }
+    });
+
+    // ==========================
+    // Кнопки: копировать и шаринг
+    // ==========================
+    const copyBtn = document.getElementById('copyBtn');
+    copyBtn.addEventListener('click', async ()=>{
+      // Если страница задеплоена, navigator.clipboard скопирует корректный URL.
+      const url = location.href && location.href.startsWith('http') ? location.href : defaultDonationUrl;
+      try {
+        await navigator.clipboard.writeText(url);
+        copyBtn.textContent = 'Скопировано!';
+        setTimeout(()=> copyBtn.textContent = 'Копировать ссылку', 1800);
+      } catch(e){
+        // fallback: создаём временный input
+        const t = document.createElement('input');
+        document.body.appendChild(t);
+        t.value = url;
+        t.select();
+        document.execCommand('copy');
+        document.body.removeChild(t);
+        copyBtn.textContent = 'Скопировано!';
+        setTimeout(()=> copyBtn.textContent = 'Копировать ссылку', 1800);
+      }
+    });
+
+    // Поделиться в X (Twitter)
+    document.getElementById('shareTw').addEventListener('click', ()=>{
+      const url = encodeURIComponent(location.href && location.href.startsWith('http') ? location.href : defaultDonationUrl);
+      const text = encodeURIComponent("ПУСТА — донат просто так");
+      window.open(`https://twitter.com/intent/tweet?text=${text}&url=${url}`, '_blank','noopener');
+    });
+
+    // Поделиться в Telegram
+    document.getElementById('shareTG').addEventListener('click', ()=>{
+      const url = encodeURIComponent(location.href && location.href.startsWith('http') ? location.href : defaultDonationUrl);
+      const text = encodeURIComponent("ПУСТА — донат просто так\n" + (location.href && location.href.startsWith('http') ? location.href : defaultDonationUrl));
+      window.open(`https://t.me/share/url?url=${url}&text=${text}`, '_blank','noopener');
+    });
+
+    // Удобство: если ссылка пустая — предотвращаем переход
+    if(!defaultDonationUrl || defaultDonationUrl === '#'){
+      donateBtn.addEventListener('click', e => e.preventDefault());
+      donateBtn.setAttribute('aria-disabled','true');
+    }
+
+    // Небольшая аналитика: лог в консоль
+    console.debug("ПУСТА — ready. Donation:", defaultDonationUrl);
+  </script>
+</body>
+</html>
