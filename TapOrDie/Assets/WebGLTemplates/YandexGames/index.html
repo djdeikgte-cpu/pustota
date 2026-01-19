@@ -1,0 +1,318 @@
+<!DOCTYPE html>
+<html lang="en-us">
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="Content-Type" content="text/html; charset=utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <title>{{{ PRODUCT_NAME }}}</title>
+
+    <!-- Yandex Games SDK -->
+    <script src="https://yandex.ru/games/sdk/v2"></script>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        html, body {
+            width: 100%;
+            height: 100%;
+            overflow: hidden;
+            background-color: #1a1a2e;
+        }
+
+        #unity-container {
+            width: 100%;
+            height: 100%;
+            position: absolute;
+            top: 0;
+            left: 0;
+        }
+
+        #unity-canvas {
+            width: 100%;
+            height: 100%;
+            background: #1a1a2e;
+            display: block;
+        }
+
+        #loading-cover {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+            z-index: 100;
+        }
+
+        #loading-cover.hidden {
+            display: none;
+        }
+
+        .game-title {
+            font-family: 'Arial Black', sans-serif;
+            font-size: 48px;
+            color: #e94560;
+            text-shadow: 0 0 20px rgba(233, 69, 96, 0.5);
+            margin-bottom: 40px;
+            animation: pulse 2s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.05); }
+        }
+
+        #loading-bar-container {
+            width: 280px;
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            overflow: hidden;
+            border: 2px solid #e94560;
+        }
+
+        #loading-bar {
+            width: 0%;
+            height: 100%;
+            background: linear-gradient(90deg, #e94560 0%, #ff6b6b 100%);
+            border-radius: 8px;
+            transition: width 0.3s ease;
+        }
+
+        #loading-text {
+            margin-top: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            color: #fff;
+        }
+
+        /* Mobile touch optimization */
+        canvas {
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        /* Fullscreen button (optional) */
+        #fullscreen-button {
+            position: absolute;
+            bottom: 10px;
+            right: 10px;
+            padding: 10px 20px;
+            background: rgba(233, 69, 96, 0.8);
+            border: none;
+            border-radius: 5px;
+            color: white;
+            font-size: 14px;
+            cursor: pointer;
+            z-index: 50;
+            display: none;
+        }
+
+        #fullscreen-button:hover {
+            background: rgba(233, 69, 96, 1);
+        }
+
+        /* Warning/Error messages */
+        #warning-banner {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            padding: 10px;
+            background: #e94560;
+            color: white;
+            text-align: center;
+            font-family: Arial, sans-serif;
+            z-index: 200;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+    <div id="warning-banner"></div>
+
+    <div id="unity-container">
+        <canvas id="unity-canvas" tabindex="-1"></canvas>
+
+        <div id="loading-cover">
+            <div class="game-title">TAP OR DIE</div>
+            <div id="loading-bar-container">
+                <div id="loading-bar"></div>
+            </div>
+            <div id="loading-text">Loading...</div>
+        </div>
+
+        <button id="fullscreen-button">Fullscreen</button>
+    </div>
+
+    <script>
+        // Global variables
+        var unityInstance = null;
+        var ysdk = null;
+
+        // Loading progress
+        var loadingBar = document.getElementById('loading-bar');
+        var loadingText = document.getElementById('loading-text');
+        var loadingCover = document.getElementById('loading-cover');
+
+        // Initialize Yandex SDK
+        function initYandexSDK() {
+            if (typeof YaGames === 'undefined') {
+                console.warn('YaGames SDK not available');
+                return Promise.resolve(null);
+            }
+
+            return YaGames.init()
+                .then(function(sdk) {
+                    ysdk = sdk;
+                    window.ysdk = sdk;
+                    console.log('Yandex SDK initialized');
+
+                    // Log environment info
+                    console.log('Language:', sdk.environment.i18n.lang);
+                    console.log('Platform:', sdk.environment.platform);
+
+                    return sdk;
+                })
+                .catch(function(err) {
+                    console.error('Yandex SDK init failed:', err);
+                    return null;
+                });
+        }
+
+        // Unity configuration
+        var buildUrl = "Build";
+        var loaderUrl = buildUrl + "/{{{ LOADER_FILENAME }}}";
+        var config = {
+            dataUrl: buildUrl + "/{{{ DATA_FILENAME }}}",
+            frameworkUrl: buildUrl + "/{{{ FRAMEWORK_FILENAME }}}",
+#if USE_THREADS
+            workerUrl: buildUrl + "/{{{ WORKER_FILENAME }}}",
+#endif
+#if USE_WASM
+            codeUrl: buildUrl + "/{{{ CODE_FILENAME }}}",
+#endif
+#if MEMORY_FILENAME
+            memoryUrl: buildUrl + "/{{{ MEMORY_FILENAME }}}",
+#endif
+#if SYMBOLS_FILENAME
+            symbolsUrl: buildUrl + "/{{{ SYMBOLS_FILENAME }}}",
+#endif
+            streamingAssetsUrl: "StreamingAssets",
+            companyName: "{{{ COMPANY_NAME }}}",
+            productName: "{{{ PRODUCT_NAME }}}",
+            productVersion: "{{{ PRODUCT_VERSION }}}",
+        };
+
+        var container = document.querySelector("#unity-container");
+        var canvas = document.querySelector("#unity-canvas");
+        var fullscreenButton = document.querySelector("#fullscreen-button");
+        var warningBanner = document.querySelector("#warning-banner");
+
+        // Mobile detection
+        var isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
+
+        // Show warning message
+        function showWarning(msg) {
+            warningBanner.innerHTML = msg;
+            warningBanner.style.display = 'block';
+            setTimeout(function() {
+                warningBanner.style.display = 'none';
+            }, 5000);
+        }
+
+        // Resize canvas to fit screen
+        function resizeCanvas() {
+            canvas.width = window.innerWidth;
+            canvas.height = window.innerHeight;
+        }
+
+        window.addEventListener('resize', resizeCanvas);
+        resizeCanvas();
+
+        // Initialize SDK first, then load Unity
+        initYandexSDK().then(function() {
+            // Load Unity
+            var script = document.createElement("script");
+            script.src = loaderUrl;
+            script.onload = function() {
+                createUnityInstance(canvas, config, function(progress) {
+                    var percent = Math.round(progress * 100);
+                    loadingBar.style.width = percent + '%';
+                    loadingText.textContent = 'Loading... ' + percent + '%';
+                }).then(function(instance) {
+                    unityInstance = instance;
+                    window.unityInstance = instance;
+
+                    // Hide loading screen
+                    loadingCover.classList.add('hidden');
+
+                    // Show fullscreen button on desktop
+                    if (!isMobile) {
+                        fullscreenButton.style.display = 'block';
+                    }
+
+                    // Notify Yandex that game is ready
+                    if (ysdk && ysdk.features && ysdk.features.LoadingAPI) {
+                        ysdk.features.LoadingAPI.ready();
+                        console.log('Game ready signal sent to Yandex');
+                    }
+
+                    console.log('Unity instance created');
+
+                }).catch(function(message) {
+                    console.error('Unity load error:', message);
+                    showWarning('Failed to load game: ' + message);
+                });
+            };
+            document.body.appendChild(script);
+        });
+
+        // Fullscreen toggle
+        fullscreenButton.onclick = function() {
+            if (document.fullscreenElement) {
+                document.exitFullscreen();
+            } else {
+                container.requestFullscreen().catch(function(err) {
+                    showWarning('Fullscreen not available');
+                });
+            }
+        };
+
+        // Prevent context menu on canvas
+        canvas.addEventListener('contextmenu', function(e) {
+            e.preventDefault();
+        });
+
+        // Handle visibility change (pause game when tab is hidden)
+        document.addEventListener('visibilitychange', function() {
+            if (unityInstance) {
+                if (document.hidden) {
+                    // Game is hidden - could send pause message
+                    console.log('Game hidden');
+                } else {
+                    // Game is visible again
+                    console.log('Game visible');
+                }
+            }
+        });
+
+        // Prevent bounce scrolling on iOS
+        document.body.addEventListener('touchmove', function(e) {
+            if (e.target === canvas) {
+                e.preventDefault();
+            }
+        }, { passive: false });
+    </script>
+</body>
+</html>
