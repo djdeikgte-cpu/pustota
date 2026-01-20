@@ -1,0 +1,15 @@
+[package]
+name = "macroquad-space-shooter"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+macroquad = "0.4"
+rand = "0.8"
+
+[profile.release]
+opt-level = "z"     # Оптимизация по размеру
+lto = true          # Link Time Optimization
+codegen-units = 1   # Уменьшение размера бинарника
+panic = "abort"     # Убираем раскрутку стека при панике
+strip = true        # Удаляем отладочные символы

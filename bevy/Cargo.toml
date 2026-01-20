@@ -1,0 +1,27 @@
+[package]
+name = "bevy-wasm-example"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+bevy = { version = "0.12", default-features = false, features = [
+    "bevy_winit",
+    "bevy_render",
+    "bevy_core_pipeline",
+    "bevy_sprite",
+    "x11", # Для Linux
+    "wayland", # Для Linux
+] }
+
+[profile.release]
+opt-level = "z"
+lto = true
+codegen-units = 1
+strip = true
+
+# Специфичная конфигурация для WASM
+[profile.wasm-release]
+inherits = "release"
+opt-level = "z"
+lto = true
+codegen-units = 1

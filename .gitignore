@@ -1,0 +1,32 @@
+# Rust
+target/
+Cargo.lock
+**/*.rs.bk
+*.pdb
+
+# WASM artifacts
+*.wasm
+pkg/
+wasm-pack.log
+
+# Bevy
+*.old
+
+# OS
+.DS_Store
+Thumbs.db
+*~
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+.*.swp
+
+# Build outputs
+dist/
+build/
+
+# Logs
+*.log

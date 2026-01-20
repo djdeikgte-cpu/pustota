@@ -1,0 +1,148 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=no">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="mobile-web-app-capable" content="yes">
+
+    <title>Space Shooter - Rust WASM Game</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            color: white;
+            overflow: hidden;
+        }
+
+        #game-container {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        h1 {
+            font-size: 2.5em;
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            margin-bottom: 10px;
+        }
+
+        .info {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+            max-width: 600px;
+        }
+
+        .info p {
+            margin: 5px 0;
+            font-size: 1.1em;
+        }
+
+        canvas {
+            border: 3px solid rgba(255, 255, 255, 0.3);
+            border-radius: 10px;
+            box-shadow: 0 10px 40px rgba(0, 0, 0, 0.5);
+            background: #000;
+            /* Предотвращаем выделение на мобильных */
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            user-select: none;
+        }
+
+        #loading {
+            font-size: 1.5em;
+            animation: pulse 1.5s ease-in-out infinite;
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .controls {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 15px 25px;
+            border-radius: 10px;
+            text-align: center;
+        }
+
+        .controls kbd {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 3px 8px;
+            border-radius: 4px;
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            font-family: monospace;
+            margin: 0 2px;
+        }
+    </style>
+</head>
+<body>
+    <div id="game-container">
+        <h1>🚀 Space Shooter</h1>
+
+        <div class="info">
+            <p><strong>Цель:</strong> Уничтожить 30 врагов</p>
+            <p><strong>Красные враги:</strong> 10 очков | <strong>Оранжевые:</strong> 20 очков | <strong>Синие бонусы:</strong> 50 очков</p>
+        </div>
+
+        <div id="loading">Загрузка игры...</div>
+
+        <!-- Canvas создастся автоматически Macroquad -->
+        <canvas id="glcanvas" tabindex="1"></canvas>
+
+        <div class="controls">
+            <p><kbd>W</kbd><kbd>A</kbd><kbd>S</kbd><kbd>D</kbd> или <kbd>↑</kbd><kbd>←</kbd><kbd>↓</kbd><kbd>→</kbd> - Движение</p>
+            <p><kbd>Space</kbd> или <kbd>Клик мышью</kbd> - Выстрел</p>
+            <p><kbd>R</kbd> - Перезапуск (после окончания игры)</p>
+        </div>
+    </div>
+
+    <script>
+        // Скрываем сообщение о загрузке когда WASM готов
+        window.addEventListener('load', function() {
+            setTimeout(() => {
+                const loading = document.getElementById('loading');
+                if (loading) {
+                    loading.style.display = 'none';
+                }
+            }, 1000);
+        });
+    </script>
+
+    <!--
+        ВАЖНО: Положите сюда ваш скомпилированный WASM файл!
+
+        После сборки командой:
+        cargo build --release --target wasm32-unknown-unknown
+
+        Ваш файл будет здесь:
+        target/wasm32-unknown-unknown/release/macroquad_space_shooter.wasm
+
+        Скопируйте его в папку с index.html
+    -->
+
+    <!-- Загрузчик Macroquad для WASM -->
+    <script src="https://not-fl3.github.io/miniquad-samples/mq_js_bundle.js"></script>
+    <script>
+        // Загрузка WASM модуля
+        load("macroquad_space_shooter.wasm");
+    </script>
+</body>
+</html>

@@ -1,0 +1,175 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Rust WASM Canvas Game</title>
+
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(135deg, #232526 0%, #414345 100%);
+            display: flex;
+            flex-direction: column;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            font-family: 'Courier New', monospace;
+            color: #00ff00;
+        }
+
+        #container {
+            text-align: center;
+            padding: 20px;
+        }
+
+        h1 {
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px #00ff00;
+            font-size: 2.5em;
+        }
+
+        canvas {
+            border: 3px solid #00ff00;
+            border-radius: 8px;
+            box-shadow: 0 0 20px rgba(0, 255, 0, 0.3);
+            display: block;
+            margin: 0 auto;
+            background: #0a0a1e;
+        }
+
+        .info {
+            margin-top: 20px;
+            background: rgba(0, 0, 0, 0.5);
+            padding: 20px;
+            border-radius: 8px;
+            border: 1px solid #00ff00;
+            max-width: 600px;
+            text-align: left;
+        }
+
+        .info h3 {
+            color: #00ff00;
+            margin-bottom: 10px;
+        }
+
+        .info p {
+            margin: 5px 0;
+            line-height: 1.6;
+        }
+
+        code {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 2px 6px;
+            border-radius: 3px;
+            color: #00ff00;
+        }
+
+        #loading {
+            font-size: 1.5em;
+            animation: blink 1s ease-in-out infinite;
+        }
+
+        @keyframes blink {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+    </style>
+</head>
+<body>
+    <div id="container">
+        <h1>🦀 Rust WASM Canvas Demo</h1>
+
+        <div id="loading">Загрузка WASM модуля...</div>
+
+        <canvas id="game-canvas"></canvas>
+
+        <div class="info">
+            <h3>📋 О проекте</h3>
+            <p>Это минимальный пример прямой интеграции Rust с Web APIs через <code>wasm-bindgen</code> и <code>web-sys</code>.</p>
+
+            <h3 style="margin-top: 15px;">🎮 Управление</h3>
+            <p><code>WASD</code> или <code>Стрелки</code> - Движение</p>
+            <p><code>Space</code> - Увеличить счёт</p>
+
+            <h3 style="margin-top: 15px;">🔧 Технологии</h3>
+            <p>✅ Canvas 2D API через web-sys</p>
+            <p>✅ Обработка событий клавиатуры</p>
+            <p>✅ Игровой цикл requestAnimationFrame</p>
+        </div>
+    </div>
+
+    <!-- JavaScript для загрузки и управления WASM -->
+    <script type="module">
+        // Импортируем сгенерированный JS модуль
+        import init, { Game } from './pkg/wasm_bindgen_canvas_game.js';
+
+        let game = null;
+        let animationId = null;
+
+        // Инициализация WASM
+        async function run() {
+            try {
+                // Загружаем WASM модуль
+                await init();
+
+                // Скрываем сообщение о загрузке
+                document.getElementById('loading').style.display = 'none';
+
+                // Создаём экземпляр игры
+                game = new Game('game-canvas');
+
+                // Обработка клавиатуры
+                window.addEventListener('keydown', (e) => {
+                    game.key_down(e.key);
+                    // Предотвращаем скролл стрелками
+                    if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight', ' '].includes(e.key)) {
+                        e.preventDefault();
+                    }
+                });
+
+                window.addEventListener('keyup', (e) => {
+                    game.key_up(e.key);
+                });
+
+                // Запускаем игровой цикл
+                gameLoop();
+
+                console.log('Game started successfully!');
+            } catch (error) {
+                console.error('Failed to initialize game:', error);
+                document.getElementById('loading').textContent = 'Ошибка загрузки: ' + error;
+            }
+        }
+
+        // Игровой цикл
+        function gameLoop() {
+            if (game) {
+                // Обновляем логику
+                game.update();
+
+                // Рендерим
+                game.render();
+            }
+
+            // Запрашиваем следующий кадр
+            animationId = requestAnimationFrame(gameLoop);
+        }
+
+        // Запускаем при загрузке страницы
+        run();
+
+        // Очистка при закрытии
+        window.addEventListener('beforeunload', () => {
+            if (animationId) {
+                cancelAnimationFrame(animationId);
+            }
+        });
+    </script>
+</body>
+</html>
