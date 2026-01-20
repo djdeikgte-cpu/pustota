@@ -1,5 +1,4 @@
 use macroquad::prelude::*;
-use rand::Rng;
 
 // ============================================================================
 // КОНСТАНТЫ ИГРЫ
@@ -138,11 +137,10 @@ async fn main() {
                 spawn_timer += get_frame_time();
                 if spawn_timer > 1.0 {
                     spawn_timer = 0.0;
-                    let mut rng = rand::thread_rng();
-                    let x = rng.gen_range(ENEMY_SIZE..screen_width() - ENEMY_SIZE);
+                    let x = rand::gen_range(ENEMY_SIZE, screen_width() - ENEMY_SIZE);
 
                     // 30% шанс на быстрого врага
-                    let enemy_type = if rng.gen_bool(0.3) {
+                    let enemy_type = if rand::gen_range(0.0, 1.0) < 0.3 {
                         EnemyType::Fast
                     } else {
                         EnemyType::Normal
@@ -181,8 +179,7 @@ async fn main() {
                 bonus_timer += get_frame_time();
                 if bonus_timer > 5.0 {
                     bonus_timer = 0.0;
-                    let mut rng = rand::thread_rng();
-                    let x = rng.gen_range(BONUS_SIZE..screen_width() - BONUS_SIZE);
+                    let x = rand::gen_range(BONUS_SIZE, screen_width() - BONUS_SIZE);
 
                     bonuses.push(Bonus {
                         pos: vec2(x, -BONUS_SIZE),
